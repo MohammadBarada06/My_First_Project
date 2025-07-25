@@ -1,0 +1,57 @@
+import matplotlib.pyplot as plt
+import pandas as pd
+df=pd.read_csv("Grocery_Inventory_and_Sales_Dataset.csv")
+#print(df.head())
+#print(df.info())
+#print(df.describe())
+
+df["Stock_Status"]=df.apply(                               # this is used to loop over each value in each column (used in this loop) in the dataset
+    lambda row:
+    "understocked" if row["Stock_Quantity"]<row["Reorder_Level"]
+     else "overstocked" if row["Stock_Quantity"]>row["Reorder_Level"]
+     else  "OK", 
+     axis=1
+)
+#print(df["Stock_Status"])
+df["Deficit"]=df.apply(                                             # this is used to loop over each value in each column (used in this loop) in the dataset
+    lambda row: row["Reorder_Level"]-row["Stock_Quantity"] if row["Stock_Status"]=="understocked"
+    else "NO DEFICIT",
+    axis=1
+)
+#print(df["Deficit"])
+df["Excess_Stock"]=df["Stock_Quantity"]-df["Reorder_Level"]
+#print(df["Excess_Stock"])
+understocked_df=df[df["Stock_Status"]=="understocked"]
+#print(understocked_df[["Stock_Status","Product_Name"]])
+overstocked_df=df[df["Stock_Status"]=="overstocked"]
+#print(overstocked_df[["Stock_Status","Product_Name"]])
+understocked_df=understocked_df.sort_values(by="Deficit",ascending=False)
+#print(understocked_df["Deficit"])
+top10_understocked_df=understocked_df.head(10)
+#print(top10_understocked_df["Deficit"])
+plt.figure(figsize=(13,4))
+plt.bar(top10_understocked_df["Product_Name"],top10_understocked_df["Deficit"],color="blue")
+plt.xlabel("product name")
+plt.ylabel("Deficit")
+plt.title("amount of deficit from the top 10 understocked items")
+plt.savefig("Deficit_per_Item.png")
+#plt.show()
+overstocked_df=overstocked_df.sort_values(by="Excess_Stock",ascending=False)
+#print(overstocked_df["Excess_Stock"])
+top10_overstocked_df=overstocked_df.head(10)
+#print(top10_overstocked_df["Excess_Stock"])
+plt.figure(figsize=(13,4))
+plt.plot(top10_overstocked_df["Reorder_Level"],top10_overstocked_df["Excess_Stock"],marker='o',linestyle='-',color="blue")
+plt.xlabel("reorder levels")
+plt.ylabel("Excess of stocks")
+plt.title("excess of stocks with respect to their reorder levels")
+plt.savefig("Excess_wrt_reorder_level.png")
+#plt.show()
+status_count=df["Stock_Status"].value_counts()
+#print(status_count)
+plt.figure(figsize=(10,8))
+plt.pie(status_count,labels=status_count.index,autopct='%.1f%%',startangle=90,colors=["blue","red","green"])
+plt.title("stock status of items")
+plt.axis('equal')
+plt.savefig("Stock_Status_of_Items.png",format='png',dpi=300,bbox_inches='tight')
+plt.show()
