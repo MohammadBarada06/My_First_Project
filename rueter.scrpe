@@ -1,0 +1,33 @@
+import requests
+from bs4 import BeautifulSoup
+import time
+import random
+headers = {
+    "User-Agent": random.choice([
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
+        "Mozilla/5.0 (Linux; Android 10)"
+    ])
+}
+response=requests.get("https://www.reuters.com/markets/",headers=headers)
+print(response.status_code)
+soup=BeautifulSoup(response.text,"lxml")
+headlines=soup.find_all('a',href=True)
+count=0
+for h in headlines:
+    title=h.get_text(strip=True)
+    link=h['href']
+    if not title:
+        continue
+    if not link.startswith("/news"):
+        continue
+    if link.startswith("/"):
+        link="https://www.reuters.com"+link
+    print(f"title: {title}")
+    print(f"for more info: {link}")
+    count+=1
+    if count==5:
+        break
+    time.sleep(random.uniform(1,5,3))
+
+
