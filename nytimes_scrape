@@ -1,0 +1,45 @@
+import requests
+from bs4 import BeautifulSoup
+import random
+import time
+
+# Send GET request with user-agent
+headers = {
+    "User-Agent": random.choice(
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" )
+        }
+
+response = requests.get("https://www.bbc.com/", headers=headers)
+print(f"Status Code: {response.status_code}")
+
+soup = BeautifulSoup(response.text, 'lxml')
+
+# Get all <a> tags that have an href and visible text
+all_links = soup.find_all('a', href=True)
+
+count = 0
+for tag in all_links:
+    title = tag.get_text(strip=True)
+    href = tag['href']
+
+    # Skip empty text
+    if not title:
+        continue
+
+    # Only keep BBC news articles (optional filter)
+    if not href.startswith("/news"):
+        continue
+
+    # Fix relative URLs
+    if href.startswith("/"):
+        href = "https://www.bbc.com" + href
+
+    print(f"Title: {title}")
+    print(f"For more info visit: {href}\n")
+
+    count += 1
+    if count == 50:
+        break
+
+    time.sleep(random.uniform(1.5,3))
+
