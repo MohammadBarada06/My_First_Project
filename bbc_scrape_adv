@@ -1,0 +1,55 @@
+import requests
+from bs4 import BeautifulSoup
+import random
+import time
+
+# Send GET request with user-agent
+headers = {
+    "User-Agent": random.choice([
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
+        "Mozilla/5.0 (Linux; Android 10)"
+    ])
+}
+
+response = requests.get("https://www.bbc.com/", headers=headers)
+print(f"Status Code: {response.status_code}")
+
+soup = BeautifulSoup(response.text, 'lxml')
+
+# Get all <a> tags that have an href and visible text
+all_links = soup.find_all('a', href=True)
+
+
+count = 0
+for tag in all_links:
+    time.sleep(random.uniform(1, 10))
+    href = tag['href']
+    if not href.startswith("/news"):
+        continue
+    link = "https://www.bbc.com" + href
+    article_response=requests.get(link,headers=headers)
+    article_soup=BeautifulSoup(article_response.text,'lxml')
+    article_title=article_soup.find('h1')
+    title=article_title.get_text(strip=True) if article_title else "no title"
+    if not title or title=="no title":
+        continue
+    article_date=article_soup.find('time')
+    date=article_date.get('datetime') if article_date and article_date.has_attr('datetime') else "no datetime"
+    article_main=article_soup.find_all('p')
+    if article_main:
+        par= "\n".join(p.get_text(strip=True) for p in article_main if p.get_text(strip=True))
+    else:
+        par="NO ARTICLE BODY FOUND"
+    # Only keep BBC news articles (optional filter)
+    print(f"Title: {title}")
+    print(f"For more info visit: {link}\n")
+    print(f"date:{date}")
+    print(f"description: {par}")
+
+
+    count += 1
+    if count == 2:
+        break
+
+   
