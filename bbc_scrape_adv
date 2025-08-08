@@ -24,6 +24,9 @@ all_links = soup.find_all('a', href=True)
 count = 0
 for tag in all_links:
     time.sleep(random.uniform(1, 10))
+    title=tag.get_text(strip=True)  if tag else "no title"
+    if not title or title=="no title":
+        continue
     href = tag['href']
     if not href.startswith("/news"):
         continue
@@ -31,9 +34,6 @@ for tag in all_links:
     article_response=requests.get(link,headers=headers)
     article_soup=BeautifulSoup(article_response.text,'lxml')
     article_title=article_soup.find('h1')
-    title=article_title.get_text(strip=True) if article_title else "no title"
-    if not title or title=="no title":
-        continue
     article_date=article_soup.find('time')
     date=article_date.get('datetime') if article_date and article_date.has_attr('datetime') else "no datetime"
     article_main=article_soup.find_all('p')
@@ -42,10 +42,12 @@ for tag in all_links:
     else:
         par="NO ARTICLE BODY FOUND"
     # Only keep BBC news articles (optional filter)
+    print("===============================================================================================")
     print(f"Title: {title}")
     print(f"For more info visit: {link}\n")
     print(f"date:{date}")
     print(f"description: {par}")
+    print("================================================================================================")
 
 
     count += 1
